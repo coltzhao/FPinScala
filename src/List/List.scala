@@ -44,10 +44,10 @@ object List {
     }
 
   
-  def sum(l: List[Int]) = 
+  def sum_new(l: List[Int]) = 
     foldRight(l, 0)((x,y) => x + y)
   
-  def product(l: List[Double]) = 
+  def product_new(l: List[Double]) = 
     foldRight(l, 1.0)(_ * _) // `_ * _` is more concise notation for `(x,y) => x * y`, see sidebar
 
 
@@ -101,6 +101,9 @@ object List {
 
   def concat[A](l: List[List[A]]): List[A] = 
     foldRight(l, Nil:List[A])(append)
+
+  def map_origin[A, B](la: List[A])(f: A => B): List[B] =
+    foldRight(la, Nil:List[B])((h,t) => Cons(f(h), t))
 
 ////
   def unit[A](a: A): List[A] = 
