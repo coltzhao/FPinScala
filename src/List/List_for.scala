@@ -92,4 +92,14 @@ object List {
       t2 <- b
     } yield ((t1,t2))
   }
+
+  def test1 = {
+    val a = List(1,2)
+    val b = List(3,4)
+    a.flatMap {
+      t1 => b.map {
+        t2 => (t1,t2)
+      }
+    }
+  }
 }
