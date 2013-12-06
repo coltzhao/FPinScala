@@ -1,14 +1,14 @@
-// sealed trait Option[+A]
-// case class Some[+A](get: A) extends Option[A]
-// case object None extends Option[Nothing]
-//
-// sealed trait Try[+T] 
-// case class Failure[+T](exception: Throwable) extends Try[T]
-// case class Success[+T](value: T) extends Try[T]
-//
-// sealed trait Either[+E,+A] 
-// case class Left[+E](get: E) extends Either[E,Nothing]
-// case class Right[+A](get: A) extends Either[Nothing,A]
+sealed trait Option[+A]
+case class Some[+A](get: A) extends Option[A]
+case object None extends Option[Nothing]
+
+sealed trait Try[+T] 
+case class Failure[+T](exception: Throwable) extends Try[T]
+case class Success[+T](value: T) extends Try[T]
+
+sealed trait Either[+E,+A] 
+case class Left[+E](get: E) extends Either[E,Nothing]
+case class Right[+A](get: A) extends Either[Nothing,A]
 
 import scala.util.{Try, Failure, Success}
 
