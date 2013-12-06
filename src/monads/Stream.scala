@@ -1,8 +1,9 @@
-sealed abstract class Stream[+A]
-object empty extends Stream[Nothing]
-sealed abstract class cons[+A] extends Stream[A]
+//sealed abstract class Stream[+A]
+//object empty extends Stream[Nothing]
+//sealed abstract class cons[+A] extends Stream[A]
 
-import  scala.collection.immutable.Stream._
+import scala.collection.immutable.Stream._
+import scala.collection.immutable.List
 
 object test {
   val test1 = List(1,2,3,4).map(_ + 10).filter(_ % 2 == 0).map(_ * 3) // iterate 3 times
