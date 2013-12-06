@@ -51,4 +51,10 @@ object test {
     y <- mean_either(Seq(4,5)).left
     z <- mean_either(Seq()).left
   } yield (x+y+z)
+
+  def test3 = for {
+    x <- mean_try(Seq(1,2,3,4,5))
+    y <- mean_try(Seq(4,5))
+    z <- mean_try(Seq())
+  } yield (x+y+z)
 }
