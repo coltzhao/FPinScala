@@ -72,5 +72,5 @@ object test {
       x <- int
       y <- int
       z <- posInt
-    } yield ((x - y) * z)
+    } yield ((x , y , z))
 }

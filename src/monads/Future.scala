@@ -48,4 +48,28 @@ object test {
     Thread.sleep(20000)
     println("\nThe end")
   }
+
+  val p = promise[Int]
+  val f = p.future
+
+  def producer = {
+    println("Begin producer")
+    Thread.sleep(3000)
+    val r = 100 //produce an Int
+    p success r
+    println("end producer")
+  }
+
+  def consumer = {
+    println("Begin consumer")
+    f onSuccess {
+      case r => println("receive product: " + r.toString)
+    }
+    println("end consumer")
+  }
+
+  def test2 = {
+    consumer
+    producer
+  } 
 }

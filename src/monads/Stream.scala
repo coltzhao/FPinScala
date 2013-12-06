@@ -42,4 +42,12 @@ object test {
 
   def test6 = fibsViaUnfold.take(5).toList
 
+  def test = {
+    val a = Stream(1,2)
+    val b = Stream(3,4)
+    for {
+      t1 <- a
+      t2 <- b
+    } yield ((t1,t2))
+  }
 }
