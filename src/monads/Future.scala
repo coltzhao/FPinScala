@@ -1,5 +1,5 @@
-trait Future[+T]
-when complete return a Try[T]
+//trait Future[+T]
+//when complete return a Try[T]
 
 
 import scala.concurrent._
