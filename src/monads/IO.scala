@@ -14,6 +14,11 @@ def unit[A](a: => A): IO[A] = new IO[A] { def run = a }
 }
 
 object test {
+  def sideEffect(x: Int): Int = { 
+    println(x)
+    x+1
+  }
+  
   def ReadLine: IO[String] = IO { readLine }
 
   def PrintLine(msg: String): IO[Unit] = IO { println(msg) }
