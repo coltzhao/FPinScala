@@ -45,6 +45,11 @@ case class Simple(seed: Long) extends RNG{
 }
 
 object test {
+  def rollDie: Int = {
+    val rng = new scala.util.Random
+    rng.nextInt(6)
+  }
+  
   type Rand[A] = ST[RNG, A]
 
   val int: Rand[Int] = ST(_.nextInt)

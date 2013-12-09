@@ -1,6 +1,6 @@
-// sealed abstract class Stream[+A]
-// object empty extends Stream[Nothing]
-// sealed abstract class cons[+A] extends Stream[A]
+//sealed abstract class Stream[+A]
+//object empty extends Stream[Nothing]
+//sealed abstract class cons[+A] extends Stream[A]
 
 import scala.collection.immutable.Stream._
 import scala.collection.immutable.List
@@ -18,6 +18,8 @@ object test {
 
   def if2[A](cond: Boolean, onTrue: => A, onFalse: => A): A =
     if (cond) onTrue else onFalse
+    
+  def test0 = if2(false, sys.error("fail"), 3)
 
   def maybeTwice(b: Boolean, i: => Int) = if (b) i+i else 0
 
