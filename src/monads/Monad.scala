@@ -35,5 +35,5 @@ trait Monad[F[_]] extends Applictive[F] {
 }
 // Monad Law
 // left identity: f(a) == flatmap(unit(a), f)
-// right identity: a == flatMap(a, x => unitx))
+// right identity: a == flatMap(a, x => unit(x))
 // associativity: flatMap(a, x => flatMap(f(x), g)) == flatMap(flatMap(a, f), g)
