@@ -1,12 +1,12 @@
-sealed trait ST[S,A] { self =>
+sealed trait State[S,A] { self =>
   def run(s: S): (A,S)
-  def map[B](f: A => B): ST[S,B] = new ST[S,B] {
+  def map[B](f: A => B): State[S,B] = new State[S,B] {
     def run(s: S) = {
       val (a, s1) = self.run(s)
       (f(a), s1)
     }
   }
-  def flatMap[B](f: A => ST[S,B]): ST[S,B] = new ST[S,B] {
+  def flatMap[B](f: A => State[S,B]): State[S,B] = new State[S,B] {
     def run(s: S) = {
       val (a, s1) = self.run(s)
       f(a).run(s1)
@@ -14,18 +14,18 @@ sealed trait ST[S,A] { self =>
   }
 }
 
-object ST {
+object State {
   def apply[S,A](f: S => (A,S) ) = {
-    new ST[S,A] {
+    new State[S,A] {
       def run(s: S): (A,S)  = f(s)
     }
   }
 
-  def unit[S, A](a: A): ST[S, A] =
-    ST(s => (a, s))
-  def get[S]: ST[S, S] = ST(s => (s, s))
-  def set[S](s: S): ST[S, Unit] = ST(_ => ((), s))
-  def modify[S](f: S => S): ST[S, Unit] = for {
+  def unit[S, A](a: A): State[S, A] =
+    State(s => (a, s))
+  def get[S]: State[S, S] = State(s => (s, s))
+  def set[S](s: S): State[S, Unit] = State(_ => ((), s))
+  def modify[S](f: S => S): State[S, Unit] = for {
     s <- get
     _ <- set(f(s))
   } yield ()
@@ -50,9 +50,9 @@ object test {
     rng.nextInt(6)
   }
   
-  type Rand[A] = ST[RNG, A]
+  type Rand[A] = State[RNG, A]
 
-  val int: Rand[Int] = ST(_.nextInt)
+  val int: Rand[Int] = State(_.nextInt)
 
   def test1 = int.run(Simple(1))
 
@@ -66,7 +66,7 @@ object test {
   def positiveLessThan(n: Int): Rand[Int] = posInt.flatMap {
     i => {
       val mod = i % n
-      if (i + (n-1) - mod > 0) ST.unit(mod) else positiveLessThan(n)
+      if (i + (n-1) - mod > 0) State.unit(mod) else positiveLessThan(n)
     }
   }
 
