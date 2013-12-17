@@ -42,4 +42,6 @@ object test {
       }
     }
   }
+
+  def compose[A,B,C](f: A => List[B], g: B => List[C]): A => List[C] = ???
 }
