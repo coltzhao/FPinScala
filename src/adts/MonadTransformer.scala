@@ -32,5 +32,6 @@ case class OptionT[M[_],A](value: M[Option[A]]) {
     m.flatMap(self.value) {
       case None => m.unit(None)
       case Some(a) => f(a).value
-}) }
+  }) 
+}
 
