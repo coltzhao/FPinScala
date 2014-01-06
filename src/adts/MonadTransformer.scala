@@ -22,6 +22,17 @@ trait Monad[F[_]] extends Applictive[F] {
     flatMap(ma)(a => unit(f(a)))
 }
 
+trait CompositionApplicative[F[_], G[_]] extends Applicative[({type λ[α] = F[G[α]]})#λ] {
+    implicit def F: Applicative[F]
+
+    implicit def G: Applicative[G]
+
+    def ap[A, B](fa: => F[G[A]])(f: => F[G[A => B]]): F[G[B]] =
+      F.apply2(f, fa)((ff, ga) => G.ap(ga)(ff))   
+    def unit[A](a: => A): F[G[A]] = F.point(G.point(a))
+}
+
+
 case class OptionT[M[_],A](value: M[Option[A]]) {
   self =>
 

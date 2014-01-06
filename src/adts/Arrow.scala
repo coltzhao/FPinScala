@@ -118,4 +118,46 @@ val OptionArrow = new KleisliArrow[Option] {
   implicit def m = OptionMonad
 }
 
+object simpleTest {
+  def twoVarFunc(x: (Int,Int)): Int = {
+    x._1 + x._2
+  }
+ 
+  def eleven (x: Any): Int = {11} 
 
+  def twelve (x: Any): Int = {12}
+
+  val test = FuncArrow.andThen(
+                FuncArrow.combine(
+                  FuncArrow.arr(eleven),  
+                  FuncArrow.arr(twelve)
+                ), 
+                FuncArrow.arr[(Int, Int), Int](twoVarFunc)
+              )
+
+  import scala.util._
+  val res = test.apply(new Random(System.currentTimeMillis).nextDouble)
+}
+
+object test {
+  def oneVarFunc: Int => Int = {
+    _ + 1
+  }
+
+  def twoVarFunc: (Int, Int) => Int = {
+    _ + _
+  }
+
+  val x1: Option[Int] = Some(1)
+
+  val x2: Option[Int] = Some(2)
+
+  val x3: Option[Int] = None
+
+  //Applicative Functor
+
+  //Arrow
+
+  //Monad
+
+}
