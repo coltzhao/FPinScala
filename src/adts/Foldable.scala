@@ -7,7 +7,7 @@ trait Monoid[A] extends Semigroup[A] {
 }
 
 trait Foldable[F[_]]  {
-  def foldMap[A, M: Monoid](t: F[A], f: A => M): M
+  def foldMap[A,B](fa: F[A], f: A => B)(implicit m: Monoid[B]): B
 
 /*
   def fold[M: Monoid](t: F[M]): M // also called reduce with variance
@@ -18,3 +18,19 @@ trait Foldable[F[_]]  {
 */
 }
 
+val IntMonoid = new Monoid[Int] {
+  def op(a: Int, b: Int): Int = a * b 
+  val zero: Int = 1
+}
+
+val ListFodable = new Foldable[List] {
+  def foldMap[A, B](t: List[A], f: A => B)(implicit m: Monoid[B]): B = 
+    t.foldRight(m.zero)((a,b) => m.op(f(a), b))
+}
+
+object test {
+
+  val x1 = List(1,2,3,4)
+
+  val r1 = ListFodable.foldMap(x1, (x: Int) => x)(IntMonoid)
+}
