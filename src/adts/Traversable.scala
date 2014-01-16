@@ -46,7 +46,7 @@ trait Traversable[T[_]] extends Functor[T] with Foldable[T] {
   def sequence[F[_]: Applicative, A](tfa: T[F[A]]): F[T[A]] = traverse(identity[F[A]], tfa)
   // The above 2 are equivelant
 
-  // underneath are deduced
+// underneath are deduced
 //  def mapM[M[_]: Monad, A, B](f: A => M[B], t: T[A]): M[T[B]] = ???
 //  def sequenceM[M[_]: Monad](tmb: T[M[B]]): M[T[B]] = ???
 

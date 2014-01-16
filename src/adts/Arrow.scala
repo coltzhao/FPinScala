@@ -37,59 +37,63 @@ trait Arrow[~>[_, _]] extends Category[~>] {
 
 trait ArrowChoice[~>[_, _]] extends Arrow[~>] {
   def left[A,B,C](f: A ~> B): (Either[A, C] ~> Either[B,C])
-  def right[A,B,C](f: A ~> B): (Either[C, A] ~> Either[C,B])
+  def right[A,B,C](f: A ~> B): (Either[C, A] ~> Either[C,B]) = {
+    def swap[X,Y] = arr[Either[X, Y], Either[Y, X]] {
+        case Left(x) => Right(x)
+        case Right(y) => Left(y)
+    }
+    compose(swap, compose(left[A, B, C](f), swap))
+  }
   def multiplex[A,B,C,D](f: A ~> B, g: C ~> D)
-    : (Either[A,C] ~> Either[B,D])
+    : (Either[A,C] ~> Either[B,D]) = 
+    compose(right[C, D, B](g), left[A, B, C](f))
   def merge[A,B,C](f: A ~> C, g: B ~> C)
-    : (Either[A,B] ~> C)
-}
-
-trait ArrowLoop[~>[_, _]] extends Arrow[~>] {
-  def loop[B, C, D](f: ((B,D) ~> (C,D)) ): (B ~> C) // ???
+    : (Either[A,B] ~> C) = {
+    def utag[D](v: Either[D, D]): D = v match {
+      case Left(x) => x
+      case Right(y) => y
+    }
+    compose(arr[Either[C,C],C](utag[C]), multiplex(f,g))
+  }
 }
 
 trait ArrowApply[~>[_, _]] extends Arrow[~>] {
   def app[B, C]: (B ~> C, B) ~> C
 }
 
-trait Functor[F[_]] {
-  def map[A,B](t: F[A])(f: A => B): F[B]
+abstract class Functor[F[_], A](value: F[A]) {
+  def map_: [B](f: A => B): F[B]
 }
 
-trait Applicative[F[_]] extends Functor[F]{
-  def unit[A](a: => A): F[A]
-  def ap[A,B](fa: F[A])(fab: F[A => B]): F[B]
+abstract class Applicative[F[_], A](o: F[A]) extends Functor[F, A](o) {
+  def unit[C](a: C): F[C]
+  def ap_: [B](f: F[A => B]): F[B] 
 
-  override def map[A,B](t: F[A])(f: A => B): F[B] = ap(t)(unit(f))
+  override def map_: [B](f: A => B): F[B] =
+    ap_:(unit(f))
 }
 
-trait Monad[F[_]] extends Applicative[F] {
-  def unit[A](a: => A): F[A]
-  def flatMap[A,B](ma: F[A])(f: A => F[B]): F[B]
-
-  override def ap[A,B](la: F[A])(f: F[A => B]): F[B] =
-    flatMap(f)(t1 => flatMap(la)(t2 => unit(t1(t2))))
-  override def map[A,B](ma: F[A])(f: A => B): F[B] =
-    flatMap(ma)(a => unit(f(a)))
+implicit def Stream2Applicative[A](o: Stream[A]): Applicative[Stream, A] = new Applicative[Stream, A](o) {
+  
+  def unit[C](a: C): Stream[C] = Stream.continually(a)
+  def ap_: [B](f: Stream[A => B]): Stream[B] = {
+    o.zip(f).map { x => (x._2(x._1)) }
+  }
 }
 
-import scala.language.higherKinds
-
-val OptionApplicatable = new Applicative[Option] {
-  def unit[A](a: => A) = Some(a)
-  def ap[A,B](a: Option[A])(f: Option[A => B]): Option[B] = 
+implicit def Option2Applicative[A](o: Option[A]): Applicative[Option, A] = new Applicative[Option, A](o) {
+  
+  def unit[C](a: C): Option[C] = Some(a)
+  def ap_: [B](f: Option[A => B]): Option[B] = {
     f.flatMap {
-      t1 => a.flatMap {
+      t1 => o.flatMap {
         t2 => unit(t1(t2))
       }
     }
+  }
 }
 
-val OptionMonad = new Monad[Option] {
-  def unit[A](a: => A) = Some(a)
-  def flatMap[A,B](a: Option[A])(f: A => Option[B]): Option[B] =
-    a.flatMap(f)
-}
+import scala.language.higherKinds
 
 val FuncArrow = new Arrow[Function1] {
   def arr[A, B](f: A => B): Function1[A, B] = f
@@ -99,23 +103,6 @@ val FuncArrow = new Arrow[Function1] {
   def id[A]: A => A = (a: A) => a
   def compose[A, B, C](f: B => C, g: A => B): (A => C) =
     (a: A) => f(g(a))
-}
-
-case class Kleisli[M[_], A, B](run: A => M[B]) extends  AnyRef  
-
-trait KleisliArrow[M[_]] extends Arrow[({type λ[α, β] = Kleisli[M, α, β]})#λ] {
-  implicit def m: Monad[M] 
-  def arr[A, B](f: A => B): Kleisli[M, A, B] = Kleisli((a: A) => m.unit(f(a)))
-  def first[A,B,C](f: Kleisli[M,A,B]): Kleisli[M, (A,C), (B,C)] =
-    Kleisli((ac: (A, C)) => m.flatMap(f.run(ac._1)){(b: B) => m.unit((b, ac._2))})
-
-  def id[A]: Kleisli[M, A, A] = Kleisli((a: A) => m.unit(a))
-  def compose[A, B, C](f: Kleisli[M,B,C], g: Kleisli[M,A,B]): Kleisli[M, A, C] = 
-    Kleisli((a: A) => m.flatMap(g.run(a))(f.run))
-}
-
-val OptionArrow = new KleisliArrow[Option] {
-  implicit def m = OptionMonad
 }
 
 object simpleTest {
@@ -139,25 +126,91 @@ object simpleTest {
   val res = test.apply(new Random(System.currentTimeMillis).nextDouble)
 }
 
+
 object test {
-  def oneVarFunc: Int => Int = {
-    _ + 1
+  def twoVarFunc: ((Stream[Int], Stream[Int])) => Stream[Int] = n => {
+    (n._1).zip(n._2).map { n  => {
+      ( n._1 < n._2 ) match { 
+        case true => n._1 
+        case false => n._2
+      }
+    }}
   }
 
-  def twoVarFunc: (Int, Int) => Int = {
-    _ + _
+  def twoVarFunc2: ((Option[Int], Option[Int])) => Option[Int] = n => {
+    n._1 match { 
+      case Some(a) => {
+        n._2 match { 
+          case Some(b) => {
+            ( a < b ) match { 
+              case true => Some(a)
+              case false => Some(b)
+            }
+          }
+          case None => None
+        }
+      }
+      case None => None
+    }
   }
 
-  val x1: Option[Int] = Some(1)
+  def threeVarFunc: (Int, Int, Int) => Int = {
+    _ + _ + _
+  }
 
-  val x2: Option[Int] = Some(2)
+  val x1: Stream[Int] = {
+    def loop(v: Int): Stream[Int] = v #:: loop(v + 1000)
+      loop(0)
+  }
 
-  val x3: Option[Int] = None
+  val x2: Stream[Int] = 0 #:: 1 #:: x2.zip(x2.tail).map { n => n._1 + n._2 }
 
-  //Applicative Functor
 
-  //Arrow
+  val x3: Stream[Int] = {
+    def loop(v: Int): Stream[Int] = v #:: loop(v * 2)
+      loop(1)
+  }
 
-  //Monad
+  val x4 = Option(1)
+  val x5 = Option(2)
+  val x6 = Option(3)
 
+  val test1 =  ((threeVarFunc.curried map_: x1) ap_: x2) ap_: x3
+
+  val test2 = FuncArrow.andThen(
+                FuncArrow.combine[Stream[Int], Stream[Int], Stream[Int]](
+                  FuncArrow.arr( (x: Any) => { x1 } ), 
+                  FuncArrow.arr( (x: Any) => { x3 } )
+                ), 
+                FuncArrow.arr[(Stream[Int], Stream[Int]), Stream[Int]](twoVarFunc)
+              )(Stream(0))
+
+  val test3 = for {
+    r1 <- x1
+    r2 <- x2
+    r3 <- x3
+  } yield { (r1,r2,r3) }
+
+  val test4 = ((threeVarFunc.curried map_: x4) ap_: x5) ap_: x6
+
+  val test5 = FuncArrow.andThen(
+                FuncArrow.combine[Option[Int], Option[Int], Option[Int]](
+                  FuncArrow.arr( (x: Any) => { x5 } ), 
+                  FuncArrow.arr( (x: Any) => { x6 } )
+                ), 
+                FuncArrow.arr[(Option[Int], Option[Int]), Option[Int]](twoVarFunc2)
+              )(Option(0))
+
+  val test6  =  {
+    for {
+      r1 <- x4
+      r2 <- x5
+    } yield {
+      if(r1 == 1) {
+        r1 * r2
+      } else {
+        r1 + r2
+      }
+    }
+  }
 }
