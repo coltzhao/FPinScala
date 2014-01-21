@@ -124,12 +124,8 @@ trait Monad[F[_]] extends Applicative[F] {
 }
 
 trait MonadFix[F[_]] extends Monad[F] {
-  def mfix[A](f: Lazy[A] => Lazy[F[A]]): Lazy[F[A]]
+  def mfix[A](f: Lazy[A => F[A]]): F[A]
 }
 
-def fix[A](f: Lazy[A] => Lazy[A]): Lazy[A] = ??? // resulr is where f(x) = x 
-
-def fixFunction[A,B](f: (A=>B) => (A=>B)): A=>B = f(fix(f))(_)
-
-val fact = fixFunction[Int,Int](f => a => if(a<=0) 1 else f(a-1) * a)
+def fix[A](f: Lazy[A => A]): A = ??? // resulr is where f(x) = x 
 
